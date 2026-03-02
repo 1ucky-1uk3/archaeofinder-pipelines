@@ -1,0 +1,40 @@
+services:
+  coin-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: archaeofinder-coin-pipeline-v4
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - SUPABASE_URL=${SUPABASE_URL:-https://neyudzqjqbqfaxbfnglx.supabase.co}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - EUROPEANA_API_KEY=${EUROPEANA_API_KEY:-asishamp}
+      - HARVARD_API_KEY=${HARVARD_API_KEY:-}
+      - RIJKSMUSEUM_API_KEY=${RIJKSMUSEUM_API_KEY:-}
+      - SMITHSONIAN_API_KEY=${SMITHSONIAN_API_KEY:-}
+      - DDB_API_KEY=${DDB_API_KEY:-pVMbvzbKl91A5Wf3eqjP3YOcXOxssLO2ouc2seKf7hLRoU6AXLQ1772056103933}
+      - CLIP_MODEL=${CLIP_MODEL:-ViT-L-14-336}
+      - CLIP_PRETRAINED=${CLIP_PRETRAINED:-openai}
+      - BATCH_SIZE=${BATCH_SIZE:-128}
+      - MAX_WORKERS=${MAX_WORKERS:-32}
+      - PREFETCH_FACTOR=${PREFETCH_FACTOR:-6}
+      - PREPROCESS_THREADS=${PREPROCESS_THREADS:-8}
+      - DOWNLOAD_TIMEOUT=${DOWNLOAD_TIMEOUT:-10}
+      - FLUSH_INTERVAL=${FLUSH_INTERVAL:-5.0}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - model-cache:/root/.cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  model-cache:
+    name: clip-model-cache-coin-v4
