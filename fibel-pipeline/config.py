@@ -51,7 +51,7 @@ API_KEYS = {
     "harvard": os.getenv("HARVARD_API_KEY", ""),
     "rijksmuseum": os.getenv("RIJKSMUSEUM_API_KEY", ""),
     "smithsonian": os.getenv("SMITHSONIAN_API_KEY", ""),
-    "ddb": os.getenv("DDB_API_KEY", "pVMbvzbKl91A5Wf3eqjP3YOcXOxssLO2ouc2seKf7hLRoU6AXLQ1772056103933"),
+    "ddb": os.getenv("DDB_API_KEY", "pVMbvzBKl91A5Wf3eqjP3YOcXOxssLO2ouc2seKf7hLRoU6AXLQ1772056103933"),
 }
 
 # --- Suchbegriffe ---
@@ -83,7 +83,7 @@ RATE_LIMITS = {
     "smithsonian_rows": 100,
 }
 
-# === DiMu (DigitaltMuseum) — Nordische Museen ===
+# === DiMu (DigitalMuseum) — Nordische Museen ===
 DIMU_API_URL = os.getenv("DIMU_API_URL", "https://api.dimu.org/api/search")
 DIMU_API_KEY = os.getenv("DIMU_API_KEY", "demo")
 DIMU_IMG_BASE = "https://dms01.dimu.org/image"
@@ -115,11 +115,25 @@ MUSEUM_DIGITAL_PAGE_SIZE = 50
 MUSEUM_DIGITAL_MAX_PAGES = 3
 
 # === Weitere Quellen ===
-ARACHNE_API_URL = "https://arachne.dainst.org/data/search"
-ARACHNE_IMG_BASE = "https://arachne.dainst.org/data/image"
+ARCHIVE_API_URL = "https://arachne.dainst.org/data/search"
+ARCHIVE_IMG_BASE = "https://arachne.dainst.org/data/image"
 SOCH_API_URL = "http://www.kulturarvsdata.se/ksamsok/api"
 POP_API_URL = "https://api.pop.culture.gouv.fr/search"
 
 # --- Adaptive Flush ---
 FLUSH_INTERVAL = float(os.getenv("FLUSH_INTERVAL", "5.0"))
 SAVE_INTERVAL = float(os.getenv("SAVE_INTERVAL", "300.0"))
+
+# =============================================================================
+# SEARCH OPTIMIZATION - Better similarity matching
+# Added: 2026-03-10
+# =============================================================================
+SIMILARITY_THRESHOLD = 0.60       # Lowered from ~0.80 to capture more similar items
+TOP_K_SEARCH_RESULTS = 50           # Increased from 10 for better comparison
+DEBUG_EMBEDDINGS = True           # Enable detailed similarity debugging
+SIMILARITY_LOG_PATH = "/app/logs/similarity.log"
+
+# Weights for multi-factor similarity (if used)
+SIMILARITY_GEOMETRIC_WEIGHT = 0.40   # Shape/structure
+SIMILARITY_PATTERN_WEIGHT = 0.30     # Surface patterns
+SIMILARITY_TEXTURE_WEIGHT = 0.30     # Color/texture
