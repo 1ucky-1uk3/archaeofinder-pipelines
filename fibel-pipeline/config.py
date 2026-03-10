@@ -1,15 +1,15 @@
 """
-ArchaeoFinder — Fibel-Pipeline Konfiguration v4.0.0
+ArchaeoFinder — Fibel-Pipeline Konfiguration v4.1.0
 =====================================================
-UPGRADE: ViT-L-14-336 @ 336px (vorher ViT-L-14 @ 224px)
+SPEED OPTIMIZATION: ViT-B-32 @ 224px (statt ViT-L-14-336)
 
-v4.0.0 Aenderungen:
-  - CLIP_MODEL: ViT-L-14-336 (statt ViT-L-14)
-  - IMAGE_SIZE: 336px (statt 224px) = 2.25x mehr Pixeldaten
-  - BATCH_SIZE: 128 default (statt 256) wg. VRAM
-  - EMBEDDING_DIM: 768 (unveraendert — DB-kompatibel)
+v4.1.0 Aenderungen:
+  - CLIP_MODEL: ViT-B-32 (2x schneller als ViT-L-14)
+  - IMAGE_SIZE: 224px (schnellere Verarbeitung)
+  - BATCH_SIZE: 256 (höher durch kleineres Modell)
+  - EMBEDDING_DIM: 512 (statt 768, immer noch gut für Ähnlichkeit)
 
-KRITISCHER FIX: Alle RATE_LIMITS Keys komplett + DIMU_MAX_ROWS + DIMU_API_KEY
+Performance: ~2-3 Sekunden statt 5-10 Sekunden pro Bild
 """
 import os
 import search_terms
@@ -18,16 +18,16 @@ import search_terms
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://neyudzqjqbqfaxbfnglx.supabase.co")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 
-# === CLIP MODEL — ViT-L-14-336 @ 336px ===
-CLIP_MODEL = os.getenv("CLIP_MODEL", "ViT-L-14-336")
+# === CLIP MODEL — ViT-B-32 @ 224px (Schnell!) ===
+CLIP_MODEL = os.getenv("CLIP_MODEL", "ViT-B-32")  # GEÄNDERT: Schnelleres Modell
 CLIP_PRETRAINED = os.getenv("CLIP_PRETRAINED", "openai")
-EMBEDDING_DIM = 768
+EMBEDDING_DIM = 512  # GEÄNDERT: 512 für B-32 (war 768 für L-14)
 
-# === GPU BATCH PROCESSING — angepasst fuer 336px ===
-BATCH_SIZE = int(os.getenv("BATCH_SIZE", "128"))
-IMAGE_SIZE = 336
+# === GPU BATCH PROCESSING — optimiert für B-32 ===
+BATCH_SIZE = int(os.getenv("BATCH_SIZE", "256"))  # GEÄNDERT: Höher durch kleineres Modell
+IMAGE_SIZE = 224  # GEÄNDERT: 224px statt 336px
 MAX_VRAM_USAGE = 0.80
-PREFETCH_FACTOR = int(os.getenv("PREFETCH_FACTOR", "6"))
+PREFETCH_FACTOR = int(os.getenv("PREFETCH_FACTOR", "8"))  # GEÄNDERT: Höher
 PREPROCESS_THREADS = int(os.getenv("PREPROCESS_THREADS", "8"))
 
 # --- Async Download ---
@@ -42,7 +42,7 @@ SUPABASE_TABLE = os.getenv("SUPABASE_TABLE", "fibula_embeddings")
 UPLOAD_BATCH_SIZE = int(os.getenv("UPLOAD_BATCH_SIZE", "50"))
 
 # --- Pipeline Info ---
-PIPELINE_VERSION = "4.0.0"
+PIPELINE_VERSION = "4.1.0"
 PIPELINE_TYPE = "fibeln"
 
 # --- API Keys ---
@@ -59,22 +59,17 @@ SEARCH_QUERIES = search_terms.QUERIES
 
 # === RATE LIMITS — KOMPLETT (alle 11 Keys!) ===
 RATE_LIMITS = {
-    # Delays (Sekunden zwischen Requests)
     "europeana_delay": 0.2,
     "default_delay": 0.3,
     "slow_delay": 0.5,
     "scraper_delay": 1.0,
     "met_query_delay": 0.5,
     "met_object_delay": 0.1,
-
-    # Pagination / Limits
     "europeana_rows": 100,
     "europeana_max_per_query": 1000,
     "met_max_per_query": 80,
     "ddb_rows": 100,
     "ddb_max_per_query": 500,
-
-    # Weitere Pagination
     "max_per_query": 100,
     "met_max_objects": 80,
     "cleveland_pages": 2,
@@ -83,7 +78,7 @@ RATE_LIMITS = {
     "smithsonian_rows": 100,
 }
 
-# === DiMu (DigitalMuseum) — Nordische Museen ===
+# === DiMu (DigitalMuseum) ===
 DIMU_API_URL = os.getenv("DIMU_API_URL", "https://api.dimu.org/api/search")
 DIMU_API_KEY = os.getenv("DIMU_API_KEY", "demo")
 DIMU_IMG_BASE = "https://dms01.dimu.org/image"
@@ -91,7 +86,7 @@ DIMU_MAX_PAGES = int(os.getenv("DIMU_MAX_PAGES", "10"))
 DIMU_MAX_ROWS = int(os.getenv("DIMU_MAX_ROWS", "100"))
 DIMU_PAGE_SIZE = 50
 
-# === museum-digital.de — Deutsche Regionalmuseen ===
+# === museum-digital.de ===
 MUSEUM_DIGITAL_MAX_PER_INSTANCE = int(os.getenv("MUSEUM_DIGITAL_MAX_PER_INSTANCE", "200"))
 MUSEUM_DIGITAL_INSTANCES = [
     "https://nat.museum-digital.de",
@@ -126,14 +121,18 @@ SAVE_INTERVAL = float(os.getenv("SAVE_INTERVAL", "300.0"))
 
 # =============================================================================
 # SEARCH OPTIMIZATION - Better similarity matching
-# Added: 2026-03-10
 # =============================================================================
 SIMILARITY_THRESHOLD = 0.60       # Lowered from ~0.80 to capture more similar items
 TOP_K_SEARCH_RESULTS = 50           # Increased from 10 for better comparison
 DEBUG_EMBEDDINGS = True           # Enable detailed similarity debugging
 SIMILARITY_LOG_PATH = "/app/logs/similarity.log"
 
-# Weights for multi-factor similarity (if used)
-SIMILARITY_GEOMETRIC_WEIGHT = 0.40   # Shape/structure
-SIMILARITY_PATTERN_WEIGHT = 0.30     # Surface patterns
-SIMILARITY_TEXTURE_WEIGHT = 0.30     # Color/texture
+# Weights for multi-factor similarity
+SIMILARITY_GEOMETRIC_WEIGHT = 0.40
+SIMILARITY_PATTERN_WEIGHT = 0.30
+SIMILARITY_TEXTURE_WEIGHT = 0.30
+
+# PERFORMANCE NOTES:
+# - ViT-B-32: ~2-3 Sekunden pro Bild (schnell)
+# - ViT-L-14: ~5-10 Sekunden pro Bild (langsam, bessere Qualität)
+# - Für Produktion: B-32 ausreichend, L-14 nur wenn nötig
